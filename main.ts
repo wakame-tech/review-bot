@@ -228,6 +228,6 @@ const main = async () => {
     await submitComments(octokit, ownerRepo, pr, commit, validated);
 };
 
-main();
+await main();
 
 Deno.exit(0);
