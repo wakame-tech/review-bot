@@ -1,4 +1,4 @@
-name: "Review Bot"
+name: "wakame-tech/review-bot"
 author: "wakame-tech"
 description: "Add review comments to pull requests using LLMs"
 runs:
