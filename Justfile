@@ -1,4 +1,4 @@
 set dotenv-filename := ".env"
 
 default:
-    ~/.deno/bin/deno task review
+    ~/.deno/bin/deno run -A main.ts

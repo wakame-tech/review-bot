@@ -1,8 +1,9 @@
 #!/usr/bin/env -S ${HOME}/.deno/bin/deno run -A
-import { Octokit } from "octokit";
-import $ from "dax";
-import { Diff, parse } from "diff_parser";
+import { Octokit } from "https://esm.sh/octokit@3.1.0";
+import $ from "https://deno.land/x/dax@0.39.2/mod.ts";
+import { Diff, parse } from "https://deno.land/x/diff_parser@v0.2.0/mod.ts";
 import { FunctionObject, Message, ReviewComment } from "./types.ts";
+import { debug, getInput } from "npm:@actions/core@1.10.1";
 
 const fetchPrDiffs = async (
     ownerRepo: string,
@@ -77,7 +78,7 @@ const submitComments = async (
             pull_number: parseInt(pr),
             commit_id: commit,
             body: "LGTM",
-            event: "APPROVE",
+            event: "COMMENT",
         });
         console.log(res);
     } else {
@@ -192,29 +193,16 @@ const chatCompletionRequest = (
 };
 
 const main = async () => {
-    const auth = Deno.env.get("GITHUB_TOKEN")!;
+    const auth = Deno.env.get("GH_TOKEN")!;
     const octokit = new Octokit({ auth });
-    const openaiApiKey = Deno.env.get("INPUT_OPENAI_API_KEY");
-    if (!openaiApiKey) {
-        throw new Error("openai_api_key is not set");
-    }
-    const model = Deno.env.get("INPUT_OPENAI_MODEL") ?? "gpt-4o-mini";
-    const ownerRepo = Deno.env.get("GITHUB_REPOSITORY");
-    if (!ownerRepo) {
-        throw new Error("GITHUB_REPOSITORY is not set");
-    }
-    const pr = Deno.env.get("INPUT_PR");
-    if (!pr) {
-        throw new Error("pr is not set");
-    }
-
-    const prompt = Deno.env.get("REVIEW_PROMPT");
-    if (!prompt) {
-        throw new Error("REVIEW_PROMPT is not set");
-    }
-
-    const commit = Deno.env.get("PR_LAST_COMMIT") ??
-        await fetchPrLastCommit(ownerRepo, pr);
+    const openaiApiKey = getInput("openai_api_key", { required: true });
+    const model = getInput("openai_model", { required: true });
+    const ownerRepo = getInput("repo", { required: true });
+    const pr = getInput("pr", { required: true });
+    debug(`pr: ${pr}`);
+    const prompt = getInput("review_prompt");
+    const commit = await fetchPrLastCommit(ownerRepo, pr);
+    debug(`commit: ${commit}`);
 
     const diffs = await fetchPrDiffs(ownerRepo, pr);
     const reviewComments: ReviewComment[] = [];
@@ -241,3 +229,5 @@ const main = async () => {
 };
 
 main();
+
+Deno.exit(0);

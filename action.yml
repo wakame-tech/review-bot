@@ -1,13 +1,32 @@
-name: "Review Bot"
+name: "wakame-tech/review-bot"
 author: "wakame-tech"
 description: "Add review comments to pull requests using LLMs"
 runs:
- using: docker
- image: Dockerfile
+  using: "composite"
+  steps:
+    - uses: denoland/setup-deno@v1
+      with:
+        deno-version: v1.x
+    - name: Deno Run
+      shell: bash
+      run: deno run -A https://raw.githubusercontent.com/wakame-tech/review-bot/refs/heads/main/main.ts
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        INPUT_REPO: ${{ inputs.repo }}
+        INPUT_PR: ${{ inputs.pr }}
+        INPUT_OPENAI_API_KEY: ${{ inputs.openai_api_key }}
+        INPUT_OPENAI_MODEL: ${{ inputs.openai_model }}
+        INPUT_REVIEW_PROMPT: ${{ inputs.review_prompt }}
 branding:
  icon: plus
  color: green
 inputs:
+  token:
+    description: Personal Access Token (PAT)
+    default: ${{ github.token }}
+  repo:
+    description: Target repository
+    default: ${{ github.repository }}
   pr:
     description: "Pull request number"
     required: true
@@ -16,6 +35,7 @@ inputs:
     required: true
   openai_model:
     description: "OpenAI model"
+    required: true
   review_prompt:
     description: "Review prompt"
     required: true
